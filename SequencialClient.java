@@ -14,7 +14,7 @@ public class SequencialClient {
     private final byte[] knownString;
     private int sizeOfBytesVector;
     private byte[] cipherText;
-    private List<byte[]> dictionary;
+    private List<String> dictionary;
 
     public SequencialClient(String fileNameBytes, String knownString) {
         this.fileNameBytes = fileNameBytes;
@@ -36,7 +36,7 @@ public class SequencialClient {
             sequencialClient.sizeOfBytesVector = Integer.parseInt(args[2]);
         }
 
-        sequencialClient.dictionary = Util.loadDictionaryToMemory();
+        sequencialClient.dictionary = Util.loadDictionary();
         sequencialClient.setCipherBytesArray();
         sequencialClient.attackAndSaveFile();
     }
@@ -71,15 +71,15 @@ public class SequencialClient {
 
     public void attackAndSaveFile() {
 
-        for (byte[] key : dictionary) {
+        for (String key : dictionary) {
             try {
-                SecretKeySpec keySpec = new SecretKeySpec(key, "Blowfish");
+                SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "Blowfish");
 
                 Cipher cipher = Cipher.getInstance("Blowfish");
                 cipher.init(Cipher.DECRYPT_MODE, keySpec);
                 byte[] decrypted = cipher.doFinal(this.cipherText);
                 if (Util.containsSubArray(decrypted, this.knownString)) {
-                    Util.saveFile(new String(key, Charset.defaultCharset()) + ".msg", decrypted);
+                    Util.saveFile(key + ".msg", decrypted);
                     System.out.println("message size (bytes) = " + this.cipherText.length);
                 }
             } catch (Exception ex) {

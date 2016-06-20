@@ -350,7 +350,8 @@ public class MasterImpl implements Master {
 
             MasterImpl obj = new MasterImpl();
 
-            obj.loadDictionary("dados/dicionario.txt");
+            List<String> dic = Util.loadDictionary();
+            obj.dictionarySize = dic.size();
 
             Master objref = (Master) UnicastRemoteObject.exportObject(obj, 0);
             registry.rebind("mestre", objref);

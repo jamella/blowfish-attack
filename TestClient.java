@@ -24,7 +24,7 @@ public class TestClient {
     private final byte[] knownString;
     private int sizeOfBytesVector;
     private byte[] cipherText;
-    private List<byte[]> dictionary;
+    private List<String> dictionary;
     private Master master;
     private String host;
 
@@ -45,7 +45,7 @@ public class TestClient {
 
             String host = args.length == 3 ? args[2] : null;
             TestClient Client = new TestClient(args[1]);
-            Client.dictionary = Util.loadDictionaryToMemory();
+            Client.dictionary = Util.loadDictionary();
             int nElementos;
 
             if (Integer.valueOf(args[0]) == 1) {
@@ -116,9 +116,9 @@ public class TestClient {
     public void sequentialattack(PrintWriter writer, int nElementos) {
         long start = System.nanoTime();
 
-        for (byte[] key : dictionary) {
+        for (String key : dictionary) {
             try {
-                SecretKeySpec keySpec = new SecretKeySpec(key, "Blowfish");
+                SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "Blowfish");
 
                 Cipher cipher = Cipher.getInstance("Blowfish");
                 cipher.init(Cipher.DECRYPT_MODE, keySpec);

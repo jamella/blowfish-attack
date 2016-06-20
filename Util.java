@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import br.inf.ufes.pp2016_01.*;
 /**
  *
@@ -68,37 +72,18 @@ public class Util {
 
     }
 
-    public static List<byte[]> loadDictionaryToMemory() {
-        List<byte[]> words = new ArrayList<>();
-        InputStream ins = null; // raw byte-stream
-        Reader r = null; // cooked reader
-        BufferedReader br = null; // buffered for readLine()
-        try {
-            String s;
-            ins = new FileInputStream("dados/dicionario.txt");
-            r = new InputStreamReader(ins, "UTF-8"); // leave charset out for default
-            br = new BufferedReader(r);
-            while ((s = br.readLine()) != null) {
-                words.add(s.getBytes());
+    public static List<String> loadDictionary() {
+        List<String> words = new ArrayList<>();
+
+        Charset charset = Charset.forName("UTF-8");
+        Path path = Paths.get("data/dicionario.txt");
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                words.add(line);
             }
-        } catch (Exception e) {
-            System.err.println(e.getMessage()); // handle exception
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Throwable t) { /* ensure close happens */ }
-            }
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (Throwable t) { /* ensure close happens */ }
-            }
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (Throwable t) { /* ensure close happens */ }
-            }
+        } catch (IOException x) {
+            System.err.format("IOException: %s%n", x);
         }
 
         return words;

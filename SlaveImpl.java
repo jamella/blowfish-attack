@@ -1,9 +1,3 @@
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -24,16 +18,12 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import br.inf.ufes.pp2016_01.*;
 
-/**
- *
- * @author thiago
- */
 public class SlaveImpl implements Slave {
 
     private SlaveManager master;
     private int id;
     private long currentIndex;
-    private List<String> words;
+    private List<String> dictionarySlice;
     private Slave remoteReference;
     private String slaveName;
     private ScheduledExecutorService checkpointScheduler;
@@ -42,7 +32,7 @@ public class SlaveImpl implements Slave {
 
     public SlaveImpl() {
         currentIndex = 0;
-        words = new ArrayList<>();
+        dictionarySlice = new ArrayList<>();
         checkpointScheduler = Executors.newScheduledThreadPool(1);
         registrationScheduler = Executors.newScheduledThreadPool(1);
     }
@@ -56,7 +46,7 @@ public class SlaveImpl implements Slave {
             for (long index = initialwordindex; index < finalwordindex; ++index) {
                 try {
                     currentIndex = index;
-                    String key = this.words.get((int) index);
+                    String key = this.dictionarySlice.get((int) index);
                     SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "Blowfish");
                     Cipher cipher = Cipher.getInstance("Blowfish");
                     cipher.init(Cipher.DECRYPT_MODE, keySpec);
@@ -98,80 +88,37 @@ public class SlaveImpl implements Slave {
         final ScheduledFuture<?> beeperHandle = checkpointScheduler.scheduleAtFixedRate(automaticCheckpoint, 10, 10, SECONDS);
     }
 
-    public static void main(String[] args) {
-        String host = (args.length < 1) ? null : args[0];
-        try {
-            SlaveImpl slave = new SlaveImpl();
-            slave.initAutomaticRegistrationTimer();
-            slave.loadDictionaryToMemory();
-            slave.slaveName = IdGenerator.getNewName();
-            slave.host = host;
-            slave.remoteReference = (Slave) UnicastRemoteObject.exportObject(slave, 0);
-            slave.attachShutDownHook();
-            initRemoteConnection(slave, host);
-        } catch (RemoteException | NotBoundException e) {
-            System.out.println("Não foi possível registrar o escravo.");
-            e.printStackTrace();
-        }
-    }
-
-    public void initAutomaticRegistrationTimer() {
-        Runnable automaticRegistration = new Runnable() {
+    /*
+     *  Creates and executes a periodic action that becomes enabled first immediately
+     * and subsequently with the given period of 30 seconds this executions will commence after
+     * initialDelay then initialDelay+period, then initialDelay + 2 * period, and so on.
+     * Always trying to addSlave on Master every 30 seconds, but if it fails
+     * looks up on the name service for the Master again
+     */
+    public void reRegistrationHook() {
+        final ScheduledFuture<?> automaticRegistrationHandle = registrationScheduler.scheduleAtFixedRate(
+        new Runnable() {
+            boolean lookUp = false;
             @Override
             public void run() {
                 try {
-                    initRemoteConnection(SlaveImpl.this, host);
+                    if(lookUp) {
+                        Registry registry = LocateRegistry.getRegistry(host);
+                        master = (SlaveManager) registry.lookup("mestre");
+                    }
+                    id = master.addSlave(remoteReference, slaveName);
                 } catch (Exception ex) {
-                    System.out.println("Não foi possível efetuar o registro novamente. Tentando novamente em 30 segundos");
+                    System.out.println("It wasn't possible to find \"mestre\" on Name Service.");
+                    lookUp = true;
+                    System.out.println("Looking up on Name service again in 30 seconds...");
                 }
             }
-        };
-        final ScheduledFuture<?> automaticRegistrationHandle = registrationScheduler.scheduleAtFixedRate(automaticRegistration, 30, 30, SECONDS);
+        },
+        0, 30, SECONDS);
     }
 
-    public void loadDictionaryToMemory() {
-        InputStream ins = null; // raw byte-stream
-        Reader r = null; // cooked reader
-        BufferedReader br = null; // buffered for readLine()
-        try {
-            String s;
-            ins = new FileInputStream("dados/dicionario.txt");
-            r = new InputStreamReader(ins, "UTF-8"); // leave charset out for default
-            br = new BufferedReader(r);
-            while ((s = br.readLine()) != null) {
-                this.words.add(s);
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage()); // handle exception
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (Throwable t) { /* ensure close happens */ }
-            }
-            if (r != null) {
-                try {
-                    r.close();
-                } catch (Throwable t) { /* ensure close happens */ }
-            }
-            if (ins != null) {
-                try {
-                    ins.close();
-                } catch (Throwable t) { /* ensure close happens */ }
-            }
-        }
-    }
-
-    public static void initRemoteConnection(SlaveImpl slave, String host) throws RemoteException, NotBoundException {
-        Registry registry = LocateRegistry.getRegistry(host);
-        SlaveManager master = (SlaveManager) registry.lookup("mestre");
-        slave.master = master;
-        slave.id = master.addSlave(slave.remoteReference, slave.slaveName);
-    }
-
-    /**
-     * Método utilizado para iniciar uma thread quando o escravo morrer e assim
-     * poder desconecta-lo do mestre
+    /*
+     * Initialize a Thread which remove the Slave on Master
      */
     public void attachShutDownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -179,10 +126,38 @@ public class SlaveImpl implements Slave {
             public void run() {
                 try {
                     master.removeSlave(id);
+                    System.out.println("Removing Slave " + slaveName + "...");
                 } catch (RemoteException ex) {
 
                 }
             }
         });
+    }
+
+    public static void main(String[] args) {
+        String host = (args.length < 1) ? null : args[0];
+
+        if (args.length < 2) {
+            System.out.println("Type the Slave Name and the Name service location.\nExample:\njava -Djava.rmi.server.hostname=192.168.0.12 SlaveNameTest");
+            System.exit(0);
+        }
+
+        SlaveImpl slave = new SlaveImpl();
+        slave.slaveName = args[1];
+        slave.dictionarySlice = Util.loadDictionary();
+        slave.host = host;
+        try {
+            slave.remoteReference = (Slave) UnicastRemoteObject.exportObject(slave, 0);
+            // Looking up for the very first time on Name service the Master
+            Registry registry = LocateRegistry.getRegistry(host);
+            slave.master = (SlaveManager) registry.lookup("mestre");
+            // Garantee the Slave stays registered on Master
+            slave.reRegistrationHook();
+            // Garantee the Slave deregister when it's finished
+            slave.attachShutDownHook();
+        } catch (RemoteException | NotBoundException e) {
+            System.out.println("It wasn't possible to register Slave " + slave.slaveName + ".");
+            e.printStackTrace();
+        }
     }
 }

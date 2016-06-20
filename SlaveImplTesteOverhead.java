@@ -74,7 +74,7 @@ public class SlaveImplTesteOverhead implements Slave {
         try {
             SlaveImplTesteOverhead slave = new SlaveImplTesteOverhead();
             slave.initAutomaticRegistrationTimer();
-            slave.loadDictionaryToMemory();
+            slave.loadDictionary();
             slave.slaveName = IdGenerator.getNewName();
             slave.host = host;
             slave.remoteReference = (Slave) UnicastRemoteObject.exportObject(slave, 0);
@@ -100,7 +100,7 @@ public class SlaveImplTesteOverhead implements Slave {
         final ScheduledFuture<?> automaticRegistrationHandle = registrationScheduler.scheduleAtFixedRate(automaticRegistration, 30, 30, SECONDS);
     }
 
-    public void loadDictionaryToMemory() {
+    public void loadDictionary() {
         InputStream ins = null; // raw byte-stream
         Reader r = null; // cooked reader
         BufferedReader br = null; // buffered for readLine()
