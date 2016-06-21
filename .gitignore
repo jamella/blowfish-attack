@@ -3,3 +3,4 @@
 data/*.class
 data/*.pdf
 br/inf/ufes/pp2016_01/*.class
+.DS_Store
