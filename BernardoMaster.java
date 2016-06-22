@@ -73,12 +73,13 @@ class BernardoMaster implements Master{
 	public void foundGuess(long currentindex,Guess currentguess)throws RemoteException{
     int slave = findSlaveByIndex(currentindex);
     if(slave == -1){
-      System.out.println("Could not find slave responsible for the index "+ currentindex);
+      System.out.println("Could not find slave responsible for the guess in the index "+ currentindex);
+      System.out.println("Guess discarted");
     }else{
       System.out.println("Slave name: " + slaveMap.get(slave).getSlaveName());
       System.out.println("Current Index: " + currentindex);
+      guesses.add(currentguess);
     }
-    guesses.add(currentguess);
 	}
 
   /**
@@ -104,11 +105,15 @@ class BernardoMaster implements Master{
 	 */
 	public void checkpoint(long currentindex)throws RemoteException{
     SlaveRunnable slave = slaveMap.get(findSlaveByIndex(currentindex));
-    slave.setCurrentWordIndex(currentindex);
-    slave.setLastCall(System.currentTimeMillis());
-    System.out.println("Checkpoint received:");
-    System.out.println("Slave name: " + slave.getSlaveName());
-    System.out.println("Index: " + currentindex);
+    if(slave != null){
+      slave.setCurrentWordIndex(currentindex);
+      slave.setLastCall(System.currentTimeMillis());
+      System.out.println("Checkpoint received:");
+      System.out.println("Slave name: " + slave.getSlaveName());
+      System.out.println("Index: " + currentindex);
+      return;
+    }
+    System.out.println("Checkpoint failed on index "+currentindex);
   }
 
   /**
@@ -149,7 +154,7 @@ class BernardoMaster implements Master{
   }
 
   /**
-   * Operação exclusiva do mestre que trata de distribuir cada escravo a sua tarefa.
+   * Operação que trata de distribuir cada escravo a sua tarefa.
    * @param initialWordIndex o indice que começa a distribuição
    * @param finalWordIndex o indice que termina
    * @return um HashMap das threads já rodando.
@@ -184,6 +189,11 @@ class BernardoMaster implements Master{
     return threadMap;
   }
 
+  /**
+   * Função que verifica se todos os escravos realizaram checkpoint nos ultimos 20 segundos.
+   * casp não, o escravo é removido.
+   * @throws RemoteException
+   */
   public void watchAttack() throws RemoteException{
     while (!allFinished()){
       for (Integer index : slaveMap.keySet()) {
@@ -191,6 +201,8 @@ class BernardoMaster implements Master{
         if(slave.getLastCall() > System.currentTimeMillis() - 20000){
           removeSlave(slave.getKey());
           spreadAttack(slave.getCurrentWordIndex(),slave.getFinalWordIndex());
+          System.out.println("Slave "+ slave.getSlaveName() + " late for the checkpoint.");
+          System.out.println("Slave "+ slave.getSlaveName()+" discarted.");
         }
       }
       try {
@@ -203,6 +215,10 @@ class BernardoMaster implements Master{
     }
   }
 
+
+  /**
+   * Retorna se todos os escravos já terminaram.
+   */
   private boolean allFinished(){
     boolean aux = true;
     for(Integer index : slaveMap.keySet()){
