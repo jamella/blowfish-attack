@@ -15,7 +15,7 @@ class BernardoSlaveRunnable implements Runnable {
   private long initialWordIndex;
   private long finalWordIndex;
   private long currentWordIndex;
-  private MyMaster callbackInterface;
+  private BernardoMaster callbackInterface;
 
   private long lastCall;
   private long timeInit;
@@ -23,7 +23,7 @@ class BernardoSlaveRunnable implements Runnable {
   public void setSubAttack(
 		long initialWordIndex,
 		long finalWordIndex,
-		MyMaster callbackInterface){
+		BernardoMaster callbackInterface){
         this.initialWordIndex = initialWordIndex;
         this.finalWordIndex = finalWordIndex;
         this.callbackInterface = callbackInterface;

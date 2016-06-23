@@ -13,7 +13,7 @@ import br.inf.ufes.pp2016_01.*;
 
 
 class BernardoMaster implements Master{
-  private ConcurrentMap<Integer, SlaveRunnable> slaveMap = new ConcurrentHashMap<>();
+  private ConcurrentMap<Integer, BernardoSlaveRunnable> slaveMap = new ConcurrentHashMap<>();
   private ConcurrentMap<String, Integer> slaveNameMap = new ConcurrentHashMap<>();
   private int registry = 0;
   private List<Guess> guesses = new ArrayList<>();
@@ -36,12 +36,12 @@ class BernardoMaster implements Master{
 	public int addSlave(Slave s, String slaveName)throws RemoteException{
     if(slaveNameMap.containsKey(slaveName)){
       int key = slaveNameMap.get(slaveName);
-      SlaveRunnable slave = new SlaveRunnable(s,slaveName,key);
+      BernardoSlaveRunnable slave = new BernardoSlaveRunnable(s,slaveName,key);
       slaveMap.put(key, slave);
       return key;
     }
     int key = registry++;
-    SlaveRunnable slave = new SlaveRunnable(s,slaveName,key);
+    BernardoSlaveRunnable slave = new BernardoSlaveRunnable(s,slaveName,key);
     slaveNameMap.put(slaveName,key);
     slaveMap.put(key,slave);
     System.out.println("Slave "+ slaveName +" added.");
@@ -54,7 +54,7 @@ class BernardoMaster implements Master{
 	 * @throws RemoteException
 	 */
 	public void removeSlave(int slaveKey)throws RemoteException{
-    SlaveRunnable slave = slaveMap.remove(slaveKey);
+    BernardoSlaveRunnable slave = slaveMap.remove(slaveKey);
     if(slave == null){
       System.out.println("Slave "+ slaveKey + " not found!");
       throw new RemoteException();
@@ -88,8 +88,8 @@ class BernardoMaster implements Master{
 	 * @throws RemoteException
 	 */
   private int findSlaveByIndex(long index){
-    for (ConcurrentMap.Entry<Integer, SlaveRunnable> entry : slaveMap.entrySet()){
-      SlaveRunnable slave = entry.getValue();
+    for (ConcurrentMap.Entry<Integer, BernardoSlaveRunnable> entry : slaveMap.entrySet()){
+      BernardoSlaveRunnable slave = entry.getValue();
       if(index <= slave.getFinalWordIndex() && index > slave.getInitialWordIndex()){
         return entry.getKey();
       }
@@ -104,7 +104,7 @@ class BernardoMaster implements Master{
 	 * @throws RemoteException
 	 */
 	public void checkpoint(long currentindex)throws RemoteException{
-    SlaveRunnable slave = slaveMap.get(findSlaveByIndex(currentindex));
+    BernardoSlaveRunnable slave = slaveMap.get(findSlaveByIndex(currentindex));
     if(slave != null){
       slave.setCurrentWordIndex(currentindex);
       slave.setLastCall(System.currentTimeMillis());
@@ -197,7 +197,7 @@ class BernardoMaster implements Master{
   public void watchAttack() throws RemoteException{
     while (!allFinished()){
       for (Integer index : slaveMap.keySet()) {
-        SlaveRunnable slave = slaveMap.get(index);
+        BernardoSlaveRunnable slave = slaveMap.get(index);
         if(slave.getLastCall() > System.currentTimeMillis() - 20000){
           removeSlave(slave.getKey());
           spreadAttack(slave.getCurrentWordIndex(),slave.getFinalWordIndex());
@@ -222,7 +222,7 @@ class BernardoMaster implements Master{
   private boolean allFinished(){
     boolean aux = true;
     for(Integer index : slaveMap.keySet()){
-      SlaveRunnable slave = slaveMap.get(index);
+      BernardoSlaveRunnable slave = slaveMap.get(index);
       if(slave.getCurrentWordIndex() < slave.getFinalWordIndex()){
         aux = false;
         break;
