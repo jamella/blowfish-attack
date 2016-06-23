@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -11,7 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.security.SecureRandom;
+import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
 import java.nio.file.Files;
@@ -19,14 +14,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import br.inf.ufes.pp2016_01.*;
-/**
- *
- * @author thiago
- */
-public class Util {
 
-    public static final int MIN_VALUE_TAM_BYTES = 1000;
-    public static final int MAX_VALUE_TAM_BYTES = 100000;
+public class Util {
 
     public static byte[] readFile(String filename) throws IOException {
 
@@ -53,30 +42,26 @@ public class Util {
         out.close();
     }
 
-    //gera um vetor aleatoria de tamanho tamanho_vetor, ou tamanho aleatorio quando essa variavel for 0
-    public static byte[] randonBytes(int tamanho_vetor) {
+    //gera um vetor aleatoria de tamanho sizeVec, ou tamanho aleatorio quando essa variavel for 0
+    public static byte[] generateArrayOfRandonBytes(int sizeVec) {
 
-        SecureRandom r = new SecureRandom();
-        int nElementos;
+        Random rand = new Random();
 
-        if (tamanho_vetor == 0) {
-            nElementos = r.nextInt(99000) + 1000;
-        } else {
-            System.out.println("tamanho do vetor: " + tamanho_vetor);
-            nElementos = tamanho_vetor;
+        if (sizeVec == 0) {
+            sizeVec = rand.nextInt(99000) + 1000;
         }
+	System.out.println(sizeVec);
 
-        byte[] byte_array = new byte[nElementos];
-        r.nextBytes(byte_array);  // randon byte array generated
+        byte[] byte_array = new byte[sizeVec];
+        rand.nextBytes(byte_array);  // randon byte array generated
         return byte_array;
-
     }
 
     public static List<String> loadDictionary() {
         List<String> words = new ArrayList<>();
 
         Charset charset = Charset.forName("UTF-8");
-        Path path = Paths.get("data/dicionario.txt");
+        Path path = Paths.get("/tmp/dicionario.txt");
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String line = null;
             while ((line = reader.readLine()) != null) {

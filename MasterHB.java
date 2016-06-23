@@ -28,9 +28,9 @@ public MasterHB(int dictionarySize){
 /**
  * Registra escravo no mestre. Deve ser chamada a cada 30s
  * por um escravo para se re-registrar.
- * @param s referência para o escravo
+ * @param s referencia para o escravo
  * @param slaveName identificador para o escravo
- * @return chave que identifica o escravo para posterior remoção
+ * @return chave que identifica o escravo para posterior remocao
  * @throws RemoteException
  */
 public int addSlave(Slave s, String slaveName) throws RemoteException {
@@ -65,7 +65,7 @@ public void removeSlave(int slaveKey) throws RemoteException {
 
 /**
  * Indica para o mestre que o escravo achou uma chave candidata.
- * @param currentindex índice da chave candidata no dicionário
+ * @param currentindex indice da chave candidata no dicionario
  * @param currentguess chute que inclui chave candidata e
  * mensagem decriptografada com a chave candidata
  * @throws RemoteException
@@ -100,7 +100,7 @@ private int findSlaveByIndex(long index){
 /**
  * Chamado por cada escravo a cada 10s durante ataque para indicar
  * progresso no ataque, e ao final do ataque.
- * @param currentindex índice da chave já verificada
+ * @param currentindex indice da chave ja verificada
  * @throws RemoteException
  */
 public void checkpoint(long currentindex) throws RemoteException {
@@ -117,7 +117,7 @@ public void checkpoint(long currentindex) throws RemoteException {
 }
 
 /**
- * Operação oferecida pelo mestre para iniciar um ataque.
+ * Operacao oferecida pelo mestre para iniciar um ataque.
  * @param ciphertext mensagem critografada
  * @param knowntext trecho conhecido da mensagem decriptografada
  * @return vetor de chutes: chaves candidatas e mensagem
@@ -177,10 +177,10 @@ public Guess[] attackOverhead(byte[] ciphertext, byte[] knowntext) throws Remote
 }
 
 /**
- * Operação que trata de distribuir cada escravo a sua tarefa.
- * @param initialWordIndex o indice que começa a distribuição
+ * Operacao que trata de distribuir cada escravo a sua tarefa.
+ * @param initialWordIndex o indice que comeca a distribuicao
  * @param finalWordIndex o indice que termina
- * @return um HashMap das threads já rodando.
+ * @return um HashMap das threads ja rodando.
  */
 protected ConcurrentMap<Integer,Thread> spreadAttack(long initialWordIndex,long finalWordIndex, boolean overhead){
 	int slaveMapSize = slaveMap.size();
@@ -213,8 +213,8 @@ protected ConcurrentMap<Integer,Thread> spreadAttack(long initialWordIndex,long 
 }
 
 /**
- * Função que verifica se todos os escravos realizaram checkpoint nos ultimos 20 segundos.
- * casp não, o escravo é removido.
+ * Funcao que verifica se todos os escravos realizaram checkpoint nos ultimos 20 segundos.
+ * casp nao, o escravo e removido.
  * @throws RemoteException
  */
 public void watchAttack() throws RemoteException {
@@ -240,7 +240,7 @@ public void watchAttack() throws RemoteException {
 
 
 /**
- * Retorna se todos os escravos já terminaram.
+ * Retorna se todos os escravos ja terminaram.
  */
 private boolean allFinished(){
 	boolean aux = true;

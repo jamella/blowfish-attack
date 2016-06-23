@@ -12,9 +12,9 @@ public interface SlaveOverhead extends Remote {
 	 * Solicita a um escravo que inicie sua parte do ataque.
 	 * @param ciphertext mensagem critografada
 	 * @param knowntext trecho conhecido da mensagem decriptografada
-	 * @param initialwordindex índice inicial do trecho do dicionário
+	 * @param initialwordindex indice inicial do trecho do dicionario
 	 * a ser considerado no sub-ataque.
-	 * @param finalwordindex índice final do trecho do dicionário
+	 * @param finalwordindex indice final do trecho do dicionario
 	 * a ser considerado no sub-ataque.
 	 * @param callbackinterface interface do mestre para chamada de
 	 * checkpoint e foundGuess

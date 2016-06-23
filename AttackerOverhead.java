@@ -10,7 +10,7 @@ import br.inf.ufes.pp2016_01.Guess;
 public interface AttackerOverhead extends Remote {
 
 	/**
-	 * Operação oferecida pelo mestre para iniciar um ataque.
+	 * Operacao oferecida pelo mestre para iniciar um ataque.
 	 * @param ciphertext mensagem critografada
 	 * @param knowntext trecho conhecido da mensagem decriptografada
 	 * @return vetor de chutes: chaves candidatas e mensagem
