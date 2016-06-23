@@ -203,7 +203,7 @@ public class Client {
       client = new Client(args[0], args[1], args[2], 0);
     }
 
-    client.automaticAttack();
+    client.normalAttack();
 
   }
 

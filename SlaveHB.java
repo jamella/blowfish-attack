@@ -39,7 +39,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
 
     @Override
     public void startSubAttack(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws RemoteException {
-        //addCheckpointScheduler(callbackinterface);
+        addCheckpointScheduler(callbackinterface);
         try {
             System.out.println("Beginning the Attack: " + initialwordindex);
             long start = System.nanoTime();

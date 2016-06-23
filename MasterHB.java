@@ -8,6 +8,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import br.inf.ufes.pp2016_01.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 
 
@@ -71,8 +75,8 @@ public void removeSlave(int slaveKey) throws RemoteException {
  * @throws RemoteException
  */
 public void foundGuess(long currentindex,Guess currentguess) throws RemoteException {
-	int slave = findSlaveByIndex(currentindex);
-	if(slave == -1) {
+	SlaveRunnable slave = findSlaveByIndex(currentindex);
+	if(slave == null) {
 		System.out.println("Could not find slave responsible for the guess in the index "+ currentindex);
 		System.out.println("Guess discarted");
 	}else{
@@ -87,14 +91,16 @@ public void foundGuess(long currentindex,Guess currentguess) throws RemoteExcept
  * @param index.
  * @throws RemoteException
  */
-private int findSlaveByIndex(long index){
+private SlaveRunnable findSlaveByIndex(long index){
 	for (ConcurrentMap.Entry<Integer, SlaveRunnable> entry : slaveMap.entrySet()) {
 		SlaveRunnable slave = entry.getValue();
-		if(index <= slave.getFinalWordIndex() && index >= slave.getInitialWordIndex()) {
-			return entry.getKey();
+		System.out.println("Slave "+slave.getSlaveName() + "  initialwordindex: "+slave.getInitialWordIndex()+ "   finalwordindex: "+slave.getFinalWordIndex());
+		System.out.println(index);
+		if(index <= slave.getFinalWordIndex() -1 && index >= slave.getInitialWordIndex()) {
+			return slave;
 		}
 	}
-	return -1;
+	return null;
 }
 
 /**
@@ -104,8 +110,7 @@ private int findSlaveByIndex(long index){
  * @throws RemoteException
  */
 public void checkpoint(long currentindex) throws RemoteException {
-	SlaveRunnable slave = slaveMap.get(findSlaveByIndex(currentindex));
-
+	SlaveRunnable slave = findSlaveByIndex(currentindex);
 	if(slave != null) {
 		slave.setCurrentWordIndex(currentindex);
 		slave.setLastCall(System.currentTimeMillis());
@@ -143,9 +148,9 @@ public Guess[] attack(byte[] ciphertext,byte[] knowntext) throws RemoteException
 			}catch (RemoteException e) {System.out.println(e.getMessage()); }
 		}
 	};
+	ScheduledExecutorService checkpointScheduler = Executors.newScheduledThreadPool(1);
+	checkpointScheduler.scheduleAtFixedRate(watchDog, 21, 20, SECONDS);
 
-	Thread watchThread = new Thread(watchDog);
-	watchThread.start();
 	try {
 		for (ConcurrentMap.Entry<Integer, Thread> entry : threads.entrySet()) {
 			entry.getValue().join();
@@ -223,21 +228,15 @@ protected ConcurrentMap<Integer,Thread> spreadAttack(long initialWordIndex,long 
  * @throws RemoteException
  */
 public void watchAttack() throws RemoteException {
-	while (!allFinished()) {
-		try {
-			Thread.sleep(20000);
-		}catch (InterruptedException e) {
-			System.out.println(e.getMessage());
-		}
-		for (Integer index : slaveMap.keySet()) {
-			SlaveRunnable slave = slaveMap.get(index);
-			if(slave.getLastCall() > System.currentTimeMillis() - 20000) {
-				if (!allFinished()) {
-					removeSlave(slave.getKey());
-					spreadAttack(slave.getCurrentWordIndex(),slave.getFinalWordIndex(), false);
-					System.out.println("Slave "+ slave.getSlaveName() + " late for the checkpoint.");
-					System.out.println("Slave "+ slave.getSlaveName()+" discarted.");
-				}
+	for (Integer index : slaveMap.keySet()) {
+		SlaveRunnable slave = slaveMap.get(index);
+		if(slave.getLastCall() > System.currentTimeMillis() - 20000) {
+			System.out.println("oi");
+			if (!allFinished()) {
+				//slave.getLastCall()
+				//removeSlave(slave.getKey());
+				//spreadAttack(slave.getCurrentWordIndex(),slave.getFinalWordIndex(), false);
+				System.out.println("Slave "+ slave.getSlaveName() + " late for the checkpoint.");
 			}
 		}
 	}
