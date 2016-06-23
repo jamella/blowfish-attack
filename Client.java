@@ -11,10 +11,13 @@ import java.rmi.registry.Registry;
 import java.util.Random;
 import java.io.FileWriter;
 import br.inf.ufes.pp2016_01.*;
+import java.util.List;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
-    private static final int SLAVES = 2;
+    private static final int SLAVES = 3;
     private static final int AVERAGE = 1;
     private static final int FINALSIZE = 2000;
 
@@ -22,51 +25,54 @@ public class Client {
     private final String fileNameBytes;
     private final byte[] knownString;
     private int sizeOfBytesVector;
-    private MasterImpl master;
+    private Master master;
     private byte[] cipherText;
 
     public Client(String host, String fileNameBytes, String knownString) {
         this.host = host;
+        this.setMasterReference(this.host);
         this.fileNameBytes = fileNameBytes;
+        this.setCipherBytesArray(this.fileNameBytes);
         this.knownString = knownString.getBytes();
     }
 
-    public static void main(String[] args) {
-        if (args.length < 3) {
-            System.out.println("Informe os argumentos:\n"
-                    + "1 - Host\n"
-                    + "2 - nome do arquivo que contém o vetor de bytes\n"
-                    + "3 - palavra conhecida que consta da mensagem");
-            exit(0);
-        }
-
-        Client client = new Client(args[0], args[1], args[2]);
-        if (args.length == 4) {
-            client.sizeOfBytesVector = Integer.parseInt(args[3]);
-        }
-
-        client.setMasterReference();
-        client.setCipherBytesArray();
-        client.attackAndSaveFile();
-
-    }
-
-    public void setMasterReference() {
+    public void setMasterReference(String host) {
         try {
             Registry registry = LocateRegistry.getRegistry(host.equals("null") ? null : host);
-            master = (MasterImpl) registry.lookup("mestre");
+            master = (Master) registry.lookup("mestre");
         } catch (Exception ex) {
             System.out.println("Erro ao localizar o mestre");
             ex.printStackTrace();
         }
     }
 
-    public void setCipherBytesArray() {
+    public void setCipherBytesArray(String fileNameBytes) {
         try {
             cipherText = Util.readFile(fileNameBytes);
             System.out.println(cipherText.length);
         } catch (IOException ex) {
             System.out.println("Wasn't able to open the file");
+        }
+    }
+
+    public void attack(byte[] ciphertext, byte[] knowntext) {
+        List<String> dictionary = Util.loadDictionary();
+        for (int index = 0; index < ciphertext.length; index++) {
+            try {
+                String key = dictionary.get(index);
+                SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "Blowfish");
+                Cipher cipher = Cipher.getInstance("Blowfish");
+                cipher.init(Cipher.DECRYPT_MODE, keySpec);
+                byte[] decrypted = cipher.doFinal(ciphertext);
+
+                if (Util.containsSubArray(decrypted, knowntext)) {
+                    Guess guess = new Guess();
+                    guess.setKey(key);
+                    guess.setMessage(decrypted);
+                }
+            } catch (Exception ex) {
+                //System.out.println("Error during decrypting");
+            }
         }
     }
 
@@ -79,7 +85,7 @@ public class Client {
             for(int i = 1000; i <= FINALSIZE; i = i+1000) {
                 cipherTextAux[(i/1000) -1] = (byte[]) java.util.Arrays.copyOfRange(cipherText, 0, i);
                 long startTimeLocal = System.nanoTime();
-                Guess[] guesses = this.master.attack(cipherTextAux[(i/1000) -1], knownString);
+                attack(cipherTextAux[(i/1000) -1], knownString);
                 long elapsedTimeLocal = System.nanoTime() - startTimeLocal;
                 double seconds = (double) elapsedTimeLocal / 1000000000.0;
                 serialTime[(i/1000) - 1] = seconds;
@@ -100,7 +106,7 @@ public class Client {
     			FileWriter writerOverhead = new FileWriter("teste"+j+"TamOverhead.csv");
 
                 //Iterates of the list of bytes, with a jump of 1000.
-                for(int i = 1000; i <= 50000; i = i+1000) {
+                for(int i = 1000; i <= FINALSIZE; i = i+1000) {
                     long startTime = 0;
     				long elapsedTime = 0;
     				int k = 1;
@@ -119,9 +125,10 @@ public class Client {
                     writerEficiency.append(i + "," + speedUp/(j*1.0) + "\n");
 
                     elapsedTime = 0;
+                    MasterOverhead m = (MasterOverhead) this.master;
                     for(k = 0; k < AVERAGE; k++) {
     					startTime = System.nanoTime();
-    					Guess[] guesses = this.master.attackOverhead(cipherTextAux[(i/1000) - 1], knownString);
+    					Guess[] guesses = m.attackOverhead(cipherTextAux[(i/1000) - 1], knownString);
     					elapsedTime += System.nanoTime() - startTime;
     				}
     				seconds = (double) elapsedTime / 1000000000.0;
@@ -137,4 +144,22 @@ public class Client {
             e.printStackTrace();
         }
     }
+
+    public static void main(String[] args) {
+        Util.getRidOfPrint();
+        if (args.length < 3) {
+            System.out.println("Try:\njava Client MasterIP pathOfFile KnownText");
+            exit(0);
+        }
+
+        Client client = new Client(args[0], args[1], args[2]);
+
+        if (args.length == 4) {
+            client.sizeOfBytesVector = Integer.parseInt(args[3]);
+        }
+
+        client.attackAndSaveFile();
+
+    }
+
 }

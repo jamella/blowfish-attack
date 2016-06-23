@@ -18,7 +18,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import br.inf.ufes.pp2016_01.*;
 
-public class SlaveImpl implements Slave, SlaveOverhead {
+public class SlaveHB implements Slave, SlaveOverhead {
 
     private SlaveManager master;
     private int id;
@@ -30,7 +30,7 @@ public class SlaveImpl implements Slave, SlaveOverhead {
     private final ScheduledExecutorService registrationScheduler;
     private String host;
 
-    public SlaveImpl() {
+    public SlaveHB() {
         currentIndex = 0;
         dictionarySlice = new ArrayList<>();
         checkpointScheduler = Executors.newScheduledThreadPool(1);
@@ -53,10 +53,6 @@ public class SlaveImpl implements Slave, SlaveOverhead {
                     byte[] decrypted = cipher.doFinal(ciphertext);
 
                     if (Util.containsSubArray(decrypted, knowntext)) {
-                        System.out.print(decrypted.length);
-                        System.out.print("  ");
-                        System.out.print(knowntext.length);
-                        System.out.println();
                         Guess guess = new Guess();
                         guess.setKey(key);
                         guess.setMessage(decrypted);
@@ -79,7 +75,7 @@ public class SlaveImpl implements Slave, SlaveOverhead {
     }
 
     public void startSubAttackOverhead(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws java.rmi.RemoteException {
-        
+
     }
 
     public void addCheckpointScheduler() {
@@ -91,7 +87,7 @@ public class SlaveImpl implements Slave, SlaveOverhead {
                 try {
                     master.checkpoint(currentIndex);
                 } catch (RemoteException ex) {
-                    System.out.println("Não foi possível enviar o checkpoint ao mestre");
+                    System.out.println("It wasn't possible send a checkpoint to the Master");
                 }
             }
         };
@@ -148,11 +144,13 @@ public class SlaveImpl implements Slave, SlaveOverhead {
         String host = (args.length < 1) ? null : args[0];
 
         if (args.length < 2) {
-            System.out.println("Type the Slave Name and the Name service location.\nExample:\njava -Djava.rmi.server.hostname=192.168.0.12 SlaveNameTest");
+            System.out.println("Try:\njava SlaveHB -Djava.rmi.server.hostname=SlaveIP MasterIP SlaveName");
             System.exit(0);
         }
 
-        SlaveImpl slave = new SlaveImpl();
+        Util.getRidOfPrint();
+
+        SlaveHB slave = new SlaveHB();
         slave.slaveName = args[1];
         slave.dictionarySlice = Util.loadDictionary();
         slave.host = host;
