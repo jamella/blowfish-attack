@@ -105,6 +105,7 @@ private int findSlaveByIndex(long index){
  */
 public void checkpoint(long currentindex) throws RemoteException {
 	SlaveRunnable slave = slaveMap.get(findSlaveByIndex(currentindex));
+
 	if(slave != null) {
 		slave.setCurrentWordIndex(currentindex);
 		slave.setLastCall(System.currentTimeMillis());
@@ -113,6 +114,7 @@ public void checkpoint(long currentindex) throws RemoteException {
 		System.out.println("Index: " + currentindex);
 		return;
 	}
+	System.out.println(findSlaveByIndex(currentindex));
 	System.out.println("Checkpoint failed on index "+currentindex);
 }
 
@@ -255,7 +257,7 @@ private boolean allFinished(){
 }
 
 public static void main(String[] args) {
-	//Util.getRidOfPrint();
+	Util.getRidOfPrint();
 	try {
 		Registry registry = LocateRegistry.getRegistry();
 		List<String> dictionary = Util.loadDictionary();

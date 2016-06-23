@@ -105,7 +105,7 @@ public class Client {
             //FileWriter writerSerial = new FileWriter("testeSerialTamTempo.csv");
             //Iterates of the list of bytes, with a jump of 1000, for a serial test
 	    int j = 0;
-            for(int i = 2000; i <= FINALSIZE; i = i+2000) {
+            //for(int i = 2000; i <= FINALSIZE; i = i+2000) {
 
                 try {
                   Scanner scan;
@@ -115,6 +115,7 @@ public class Client {
                     while(scan.hasNextDouble())
                     {
                         serialTime[j] = scan.nextDouble();
+                        j++;
                     }
 
                 } catch (FileNotFoundException e1) {
@@ -127,8 +128,8 @@ public class Client {
                 double seconds = (double) elapsedTimeLocal / 1000000000.0;
                 serialTime[j] = seconds;
                 writerSerial.append(i + "," + seconds + "\n");*/
-		              j++;
-            }
+
+          //  }
             //writerSerial.close();
         //} catch(IOException e) {
       //      e.printStackTrace();
@@ -159,7 +160,7 @@ public class Client {
 
                     double seconds = (double) elapsedTime / 1000000000.0;
                     writerTime.append(i + "," + seconds/(k*1.0) + "\n");
-                    System.out.println(serialTime[m]);
+                    //System.out.println(serialTime[m]);
                     double speedUp = (serialTime[m]/(elapsedTime/(k*1.0)));
     				writerSpeedUp.append(i + "," + speedUp + "\n");
                     writerEficiency.append(i + "," + speedUp/(j*1.0) + "\n");
@@ -192,7 +193,7 @@ public class Client {
             exit(0);
         }
 
-        //Util.getRidOfPrint();
+        Util.getRidOfPrint();
 
         Client client;
         if (args.length == 4) {
