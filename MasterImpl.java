@@ -29,7 +29,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  *
  * @author thiago
  */
-public class MasterImpl implements Master {
+public class MasterImpl implements Master, MasterOverhead {
 
     private ConcurrentMap<Integer, Slave> slaves;
     private ConcurrentMap<Integer, String> slavesName;
@@ -70,7 +70,7 @@ public class MasterImpl implements Master {
             }
         }
         if (slaveId == -1) {
-            slaveId = IdGenerator.getNewId();
+            slaveId++;
             System.out.println("Novo Escravo:");
             System.out.println("Nome: " + slavename);
             System.out.println("ID:" + slaveId + "\n\n");
@@ -187,6 +187,11 @@ public class MasterImpl implements Master {
         }
         guesses = new ArrayList<>();
         return guess;
+    }
+
+    @Override
+    public Guess[] attackOverhead(byte[] ciphertext, byte[] knowntext) throws RemoteException {
+        return null;
     }
 
     public void splitWorkBetweenSlaves(byte[] ciphertext, byte[] knowntext) {

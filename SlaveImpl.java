@@ -18,7 +18,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import br.inf.ufes.pp2016_01.*;
 
-public class SlaveImpl implements Slave {
+public class SlaveImpl implements Slave, SlaveOverhead {
 
     private SlaveManager master;
     private int id;
@@ -41,7 +41,7 @@ public class SlaveImpl implements Slave {
     public void startSubAttack(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws RemoteException {
         addCheckpointScheduler();
         try {
-            System.out.println("Iniciando Ataque de: " + initialwordindex);
+            System.out.println("Beginning the Attack: " + initialwordindex);
             long start = System.nanoTime();
             for (long index = initialwordindex; index < finalwordindex; ++index) {
                 try {
@@ -51,25 +51,35 @@ public class SlaveImpl implements Slave {
                     Cipher cipher = Cipher.getInstance("Blowfish");
                     cipher.init(Cipher.DECRYPT_MODE, keySpec);
                     byte[] decrypted = cipher.doFinal(ciphertext);
+
                     if (Util.containsSubArray(decrypted, knowntext)) {
+                        System.out.print(decrypted.length);
+                        System.out.print("  ");
+                        System.out.print(knowntext.length);
+                        System.out.println();
                         Guess guess = new Guess();
                         guess.setKey(key);
                         guess.setMessage(decrypted);
                         callbackinterface.foundGuess(index, guess);
                     }
                 } catch (Exception ex) {
+                    //System.out.println("Error during decrypting");
                 }
             }
             callbackinterface.checkpoint(currentIndex);
             long end = System.nanoTime();
             long elapsedTime = end - start;
             double seconds = (double) elapsedTime / 1000000000.0;
-            System.out.println("Finalizando Ataque até: " + finalwordindex);
-            System.out.println("Foram gastos " + seconds + " para achar a resposta\n");
+            System.out.println("Ending the Attack till: " + finalwordindex);
+            System.out.println("The slave "+ slaveName +" spend " + seconds + " seconds to find the answer\n");
         } finally {
             checkpointScheduler.shutdown();
             checkpointScheduler = Executors.newScheduledThreadPool(1);
         }
+    }
+
+    public void startSubAttackOverhead(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws java.rmi.RemoteException {
+        
     }
 
     public void addCheckpointScheduler() {
