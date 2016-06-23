@@ -39,7 +39,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
 
     @Override
     public void startSubAttack(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws RemoteException {
-        addCheckpointScheduler();
+        addCheckpointScheduler(callbackinterface);
         try {
             System.out.println("Beginning the Attack: " + initialwordindex);
             long start = System.nanoTime();
@@ -62,7 +62,6 @@ public class SlaveHB implements Slave, SlaveOverhead {
                     //System.out.println("Error during decrypting");
                 }
             }
-            callbackinterface.checkpoint(currentIndex);
             long end = System.nanoTime();
             long elapsedTime = end - start;
             double seconds = (double) elapsedTime / 1000000000.0;
@@ -78,14 +77,15 @@ public class SlaveHB implements Slave, SlaveOverhead {
 
     }
 
-    public void addCheckpointScheduler() {
+    public void addCheckpointScheduler(SlaveManager callbackinterface) {
         checkpointScheduler = Executors.newScheduledThreadPool(1);
         Runnable automaticCheckpoint = new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    master.checkpoint(currentIndex);
+                    callbackinterface.checkpoint(currentIndex);
+                    System.out.println("It was possible send a checkpoint to the Master");
                 } catch (RemoteException ex) {
                     System.out.println("It wasn't possible send a checkpoint to the Master");
                 }
@@ -148,7 +148,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
             System.exit(0);
         }
 
-        Util.getRidOfPrint();
+        //Util.getRidOfPrint();
 
         SlaveHB slave = new SlaveHB();
         slave.slaveName = args[1];
