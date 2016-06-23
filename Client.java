@@ -32,13 +32,13 @@ public class Client {
 
   public Client(String host, String fileNameBytes, String knownString, int size) {
     this.host = host;
-    this.setMasterReference(this.host);
+    this.setMasterReference();
     this.fileNameBytes = fileNameBytes;
     this.setCipherBytesArray(this.fileNameBytes, size);
     this.knownString = knownString.getBytes();
   }
 
-  public void setMasterReference(String host) {
+  public void setMasterReference() {
     try {
       Registry registry = LocateRegistry.getRegistry(host.equals("null") ? null : host);
       master = (Master) registry.lookup("mestre");
@@ -154,7 +154,7 @@ public class Client {
 
         for(k = 0; k < AVERAGE; k++) {
           startTime = System.nanoTime();
-          Guess[] guesses = master.attack(cipherTextAux[m], knownString);
+          master.attack(cipherTextAux[m], knownString);
           elapsedTime += System.nanoTime() - startTime;
         }
 
@@ -169,7 +169,7 @@ public class Client {
         MasterOverhead ma = (MasterOverhead) master;
         for(k = 0; k < AVERAGE; k++) {
           startTime = System.nanoTime();
-          Guess[] guesses = ma.attackOverhead(cipherTextAux[m], knownString);
+          ma.attackOverhead(cipherTextAux[m], knownString);
           elapsedTime += System.nanoTime() - startTime;
         }
         seconds = (double) elapsedTime / 1000000000.0;
@@ -203,7 +203,7 @@ public class Client {
       client = new Client(args[0], args[1], args[2], 0);
     }
 
-    client.normalAttack();
+    client.automaticAttack();
 
   }
 

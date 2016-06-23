@@ -43,7 +43,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
         try {
             System.out.println("Beginning the Attack: " + initialwordindex);
             long start = System.nanoTime();
-            for (long index = initialwordindex; index < finalwordindex; index++) {
+            for (long index = initialwordindex; index <= finalwordindex; index++) {
                 try {
                     currentIndex = index;
                     String key = this.dictionarySlice.get((int) index);
@@ -62,6 +62,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
                     //System.out.println("Error during decrypting");
                 }
             }
+            callbackinterface.checkpoint(currentIndex);
             long end = System.nanoTime();
             long elapsedTime = end - start;
             double seconds = (double) elapsedTime / 1000000000.0;
@@ -85,7 +86,6 @@ public class SlaveHB implements Slave, SlaveOverhead {
             public void run() {
                 try {
                     callbackinterface.checkpoint(currentIndex);
-                    System.out.println("It was possible send a checkpoint to the Master");
                 } catch (RemoteException ex) {
                     System.out.println("It wasn't possible send a checkpoint to the Master");
                 }
