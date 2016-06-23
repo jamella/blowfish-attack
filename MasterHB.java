@@ -90,7 +90,7 @@ public void foundGuess(long currentindex,Guess currentguess) throws RemoteExcept
 private int findSlaveByIndex(long index){
 	for (ConcurrentMap.Entry<Integer, SlaveRunnable> entry : slaveMap.entrySet()) {
 		SlaveRunnable slave = entry.getValue();
-		if(index <= slave.getFinalWordIndex() && index > slave.getInitialWordIndex()) {
+		if(index <= slave.getFinalWordIndex() && index >= slave.getInitialWordIndex()) {
 			return entry.getKey();
 		}
 	}
