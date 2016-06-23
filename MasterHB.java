@@ -90,7 +90,7 @@ public void foundGuess(long currentindex,Guess currentguess) throws RemoteExcept
 private int findSlaveByIndex(long index){
 	for (ConcurrentMap.Entry<Integer, SlaveRunnable> entry : slaveMap.entrySet()) {
 		SlaveRunnable slave = entry.getValue();
-		if(index <= slave.getFinalWordIndex() && index > slave.getInitialWordIndex()) {
+		if(index <= slave.getFinalWordIndex() && index >= slave.getInitialWordIndex()) {
 			return entry.getKey();
 		}
 	}
@@ -143,6 +143,9 @@ public Guess[] attack(byte[] ciphertext,byte[] knowntext) throws RemoteException
 			}catch (RemoteException e) {System.out.println(e.getMessage()); }
 		}
 	};
+
+	Thread watchThread = new Thread(watchDog);
+	watchThread.start();
 	try {
 		for (ConcurrentMap.Entry<Integer, Thread> entry : threads.entrySet()) {
 			entry.getValue().join();
@@ -221,21 +224,21 @@ protected ConcurrentMap<Integer,Thread> spreadAttack(long initialWordIndex,long 
  */
 public void watchAttack() throws RemoteException {
 	while (!allFinished()) {
+		try {
+			Thread.sleep(20000);
+		}catch (InterruptedException e) {
+			System.out.println(e.getMessage());
+		}
 		for (Integer index : slaveMap.keySet()) {
 			SlaveRunnable slave = slaveMap.get(index);
 			if(slave.getLastCall() > System.currentTimeMillis() - 20000) {
-				removeSlave(slave.getKey());
-				spreadAttack(slave.getCurrentWordIndex(),slave.getFinalWordIndex(), false);
-				System.out.println("Slave "+ slave.getSlaveName() + " late for the checkpoint.");
-				System.out.println("Slave "+ slave.getSlaveName()+" discarted.");
+				if (!allFinished()) {
+					removeSlave(slave.getKey());
+					spreadAttack(slave.getCurrentWordIndex(),slave.getFinalWordIndex(), false);
+					System.out.println("Slave "+ slave.getSlaveName() + " late for the checkpoint.");
+					System.out.println("Slave "+ slave.getSlaveName()+" discarted.");
+				}
 			}
-		}
-		try {
-			if (!allFinished()) {
-				Thread.sleep(20000);
-			}
-		}catch (InterruptedException e) {
-			System.out.println(e.getMessage());
 		}
 	}
 }
