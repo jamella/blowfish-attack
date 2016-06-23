@@ -43,7 +43,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
         try {
             System.out.println("Beginning the Attack: " + initialwordindex);
             long start = System.nanoTime();
-            for (long index = initialwordindex; index < finalwordindex; ++index) {
+            for (long index = initialwordindex; index < finalwordindex; index++) {
                 try {
                     currentIndex = index;
                     String key = this.dictionarySlice.get((int) index);

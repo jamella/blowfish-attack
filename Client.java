@@ -157,6 +157,7 @@ public class Client {
           elapsedTime += System.nanoTime() - startTime;
         }
 
+<<<<<<< HEAD
         double seconds = (double) elapsedTime / 1000000000.0;
         writerTime.append(i + "," + seconds/(k*1.0) + "\n");
         System.out.println(serialTime[m]);
@@ -170,6 +171,94 @@ public class Client {
           startTime = System.nanoTime();
           Guess[] guesses = ma.attackOverhead(cipherTextAux[m], knownString);
           elapsedTime += System.nanoTime() - startTime;
+=======
+    public void automaticAttack() {
+        double[] serialTime = new double[50];
+        byte[][] cipherTextAux = new byte[50][];
+        //try {
+            //FileWriter writerSerial = new FileWriter("testeSerialTamTempo.csv");
+            //Iterates of the list of bytes, with a jump of 1000, for a serial test
+	    int j = 0;
+            //for(int i = 2000; i <= FINALSIZE; i = i+2000) {
+
+                try {
+                  Scanner scan;
+                  File file = new File("testeSerialTamTempo");
+                    scan = new Scanner(file);
+
+                    while(scan.hasNextDouble())
+                    {
+                        serialTime[j] = scan.nextDouble();
+                        j++;
+                    }
+
+                } catch (FileNotFoundException e1) {
+                        e1.printStackTrace();
+                }
+                /*cipherTextAux[j] = (byte[]) java.util.Arrays.copyOfRange(cipherText, 0, i);
+                long startTimeLocal = System.nanoTime();
+                attack(cipherTextAux[j], knownString);
+                long elapsedTimeLocal = System.nanoTime() - startTimeLocal;
+                double seconds = (double) elapsedTimeLocal / 1000000000.0;
+                serialTime[j] = seconds;
+                writerSerial.append(i + "," + seconds + "\n");*/
+
+          //  }
+            //writerSerial.close();
+        //} catch(IOException e) {
+      //      e.printStackTrace();
+        //}
+        int m = 0;
+        try {
+            //Iterates from 5 slaves till 2.
+            //for(j = SLAVES; j > ; j--) {
+                //Create files to write the data.
+    			FileWriter writerTime = new FileWriter("teste"+SLAVES+"TamTempo.csv");
+    			FileWriter writerSpeedUp = new FileWriter("teste"+SLAVES+"TamSpeed.csv");
+                FileWriter writerEficiency = new FileWriter("teste"+SLAVES+"TamEficiencia.csv");
+    			FileWriter writerOverhead = new FileWriter("teste"+SLAVES+"TamOverhead.csv");
+
+                //Iterates of the list of bytes, with a jump of 1000.
+
+                for(int i = 2000; i <= FINALSIZE; i = i+2000) {
+                    long startTime = 0;
+    				long elapsedTime = 0;
+    				int k = 1;
+            cipherTextAux[m] = (byte[]) java.util.Arrays.copyOfRange(cipherText, 0, i);
+
+    				for(k = 0; k < AVERAGE; k++) {
+    					startTime = System.nanoTime();
+    					Guess[] guesses = this.master.attack(cipherTextAux[m], knownString);
+    					elapsedTime += System.nanoTime() - startTime;
+    				}
+
+                    double seconds = (double) elapsedTime / 1000000000.0;
+                    writerTime.append(i + "," + seconds/(k*1.0) + "\n");
+                    //System.out.println(serialTime[m]);
+                    double speedUp = (serialTime[m]/(elapsedTime/(k*1.0)));
+    				writerSpeedUp.append(i + "," + speedUp + "\n");
+                    writerEficiency.append(i + "," + speedUp/(j*1.0) + "\n");
+
+                    elapsedTime = 0;
+                    MasterOverhead ma = (MasterOverhead) this.master;
+                    for(k = 0; k < AVERAGE; k++) {
+    					startTime = System.nanoTime();
+    					Guess[] guesses = ma.attackOverhead(cipherTextAux[m], knownString);
+    					elapsedTime += System.nanoTime() - startTime;
+    				}
+    				seconds = (double) elapsedTime / 1000000000.0;
+    				writerOverhead.append(i + "," + seconds/(k*1.0) + "\n");
+		          m++;
+                }
+                //this.master.removeSlave(j-1);
+                writerTime.close();
+                writerSpeedUp.close();
+                writerOverhead.close();
+                writerEficiency.close();
+          //  }
+        } catch(IOException e) {
+            e.printStackTrace();
+>>>>>>> 2297417504758739fa4cb1b00431229b5d84a54b
         }
         seconds = (double) elapsedTime / 1000000000.0;
         writerOverhead.append(i + "," + seconds/(k*1.0) + "\n");
@@ -192,7 +281,11 @@ public class Client {
       exit(0);
     }
 
+<<<<<<< HEAD
     //Util.getRidOfPrint();
+=======
+        Util.getRidOfPrint();
+>>>>>>> 2297417504758739fa4cb1b00431229b5d84a54b
 
     Client client;
     if (args.length == 4) {
