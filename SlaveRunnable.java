@@ -7,45 +7,32 @@ import br.inf.ufes.pp2016_01.*;
 
 class SlaveRunnable implements Runnable {
 
-  private Slave slave;
-  private int key;
-  private String slaveName;
-  private byte[] cipherText;
-  private byte[] knownText;
-  private long initialWordIndex;
-  private long finalWordIndex;
-  private long currentWordIndex;
-  private boolean overhead;
-  private MasterHB callbackInterface;
+  private final Slave slave;
+  private final int key;
+  private final String slaveName;
+  private final long initialWordIndex;
+  private final long finalWordIndex;
+  private final boolean overhead;
+  private final MasterHB callbackInterface;
+  private final long timeInit;
 
-  private long lastCall;
-  private long timeInit;
-
-  public void setSubAttack(
-		long initialWordIndex,
-		long finalWordIndex,
-		MasterHB callbackInterface,
-    boolean overhead){
-        this.initialWordIndex = initialWordIndex;
-        this.finalWordIndex = finalWordIndex;
-        this.callbackInterface = callbackInterface;
-        this.currentWordIndex = initialWordIndex;
-        this.overhead = overhead;
-  }
-
-  public SlaveRunnable(Slave slave, String slaveName,int key){
+  public SlaveRunnable(Slave slave, String slaveName,int key, long i, long f, boolean o, MasterHB m){
     this.slave = slave;
     this.slaveName = slaveName;
     this.key = key;
+    this.initialWordIndex = i;
+    this.finalWordIndex = f;
+    this.overhead = o;
+    this.callbackInterface = m;
+    this.timeInit = System.currentTimeMillis();
   }
+
 
   @Override
   public void run(){
-    timeInit = System.currentTimeMillis();
-    lastCall = timeInit;
     try {
-      cipherText = callbackInterface.cipherText;
-      knownText = callbackInterface.knownText;
+      byte[] cipherText = callbackInterface.cipherText;
+      byte[] knownText = callbackInterface.knownText;
       if(this.overhead) {
         SlaveOverhead s = (SlaveOverhead) slave;
         s.startSubAttackOverhead(cipherText,knownText,initialWordIndex,finalWordIndex,(SlaveManager)callbackInterface);
@@ -56,48 +43,33 @@ class SlaveRunnable implements Runnable {
     catch (RemoteException e) {
       try {
         callbackInterface.removeSlave(key);
-        callbackInterface.spreadAttack(currentWordIndex,finalWordIndex, false);
+        callbackInterface.spreadAttack(callbackInterface.currentWordIndexMap.get(this.key),finalWordIndex, false);
       }catch (RemoteException ex) {}
     }
   }
 
-  public void setCurrentWordIndex(long newIndex){
-    currentWordIndex = newIndex;
+  public synchronized long getInitialWordIndex(){
+    return initialWordIndex;
   }
 
-  public void setLastCall(long newTime){
-    lastCall = newTime;
-  }
-
-  public long getLastCall(){
-    return lastCall;
-  }
-
-  public long getCurrentWordIndex(){
-    return currentWordIndex;
-  }
-
-  public long getInitialWordIndex(){
-    return currentWordIndex;
-  }
-
-  public long getFinalWordIndex(){
+  public synchronized long getFinalWordIndex(){
     return finalWordIndex;
   }
 
-  public String getSlaveName(){
+  public synchronized String getSlaveName(){
     return slaveName;
   }
 
-  public Slave getSlave(){
+  public synchronized Slave getSlave(){
     return slave;
   }
 
-  public int getKey(){
+  public synchronized int getKey(){
     return key;
   }
 
-  public long getTimeInit(){
+  public synchronized long getTimeInit(){
     return timeInit;
   }
+
 }
