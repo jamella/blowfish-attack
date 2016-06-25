@@ -20,8 +20,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
-  private static final int SLAVES = 5;
-  private static final int AVERAGE = 3;
+  private static final int SLAVES = 2;
+  private static final int AVERAGE = 1;
   private static final int FINALSIZE = 100000;
 
   private final String host;
@@ -161,7 +161,8 @@ public class Client {
         double seconds = (double) elapsedTime / 1000000000.0;
         writerTime.append(i + "," + seconds/(k*1.0) + "\n");
         System.out.println(serialTime[m]);
-        double speedUp = (serialTime[m]/(elapsedTime/(k*1.0)));
+        float speedUp = (float)(serialTime[m]/(elapsedTime/(k*1.0)));
+
         writerSpeedUp.append(i + "," + speedUp + "\n");
         writerEficiency.append(i + "," + speedUp/(j*1.0) + "\n");
 

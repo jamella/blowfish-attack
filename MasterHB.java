@@ -259,7 +259,7 @@ private boolean allFinished(){
 }
 
 public static void main(String[] args) {
-	//Util.getRidOfPrint();
+	Util.getRidOfPrint();
 	try {
 		Registry registry = LocateRegistry.getRegistry();
 		List<String> dictionary = Util.loadDictionary();

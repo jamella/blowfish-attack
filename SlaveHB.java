@@ -148,7 +148,7 @@ public class SlaveHB implements Slave, SlaveOverhead {
             System.exit(0);
         }
 
-        //Util.getRidOfPrint();
+        Util.getRidOfPrint();
 
         SlaveHB slave = new SlaveHB();
         slave.slaveName = args[1];
