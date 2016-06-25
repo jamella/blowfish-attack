@@ -18,16 +18,16 @@ import br.inf.ufes.pp2016_01.*;
 
 
 class MasterBH implements Master{
+  private int registry = 0;
   private ConcurrentMap<Integer, Slave> slaveMap = new ConcurrentHashMap<>();
   private ConcurrentMap<Integer, String> slaveNameMap = new ConcurrentHashMap<>();
   private List<SlaveAttack> attacks = new ArrayList<>();
-  private int registry = 0;
   private List<Guess> guesses = new ArrayList<>();
   protected byte[] cipherText;
   protected byte[] knownText;
   private int dictionarySize;
   protected Master callbackInterface;
-  private long WATCH_TIMER = 12000;
+  private long WATCH_TIMER = 20000;
 
   public void setCallBackInterface(Master cb){
     callbackInterface = cb;
