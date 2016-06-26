@@ -20,20 +20,15 @@ import br.inf.ufes.pp2016_01.*;
 
 public class SlaveBH implements Slave{
 
-  private SlaveManager master;
   private int id;
-  private long currentIndex;
   private List<String> dictionarySlice;
+  private SlaveManager slaveManager;
   private Slave remoteReference;
   private String slaveName;
-  private ScheduledExecutorService checkpointScheduler;
   private final ScheduledExecutorService registrationScheduler;
-  private String host;
 
   public SlaveBH() {
-    currentIndex = 0;
     dictionarySlice = new ArrayList<>();
-    checkpointScheduler = Executors.newScheduledThreadPool(1);
     registrationScheduler = Executors.newScheduledThreadPool(1);
   }
 
@@ -43,8 +38,10 @@ public class SlaveBH implements Slave{
     Thread thread = new Thread(new Runnable(){
       @Override
       public void run(){
-        addCheckpointScheduler(callbackinterface);
+        ScheduledExecutorService checkpointScheduler = Executors.newScheduledThreadPool(1);
         try {
+          long currentIndex = initialwordindex;
+          checkpointScheduler = addCheckpointScheduler(callbackinterface, currentIndex);
           System.out.println("Beginning the Attack: " + initialwordindex);
           long start = System.nanoTime();
           for (long index = initialwordindex; index <= finalwordindex; index++) {
@@ -60,13 +57,13 @@ public class SlaveBH implements Slave{
                 Guess guess = new Guess();
                 guess.setKey(key);
                 guess.setMessage(decrypted);
-                callbackinterface.foundGuess(index, guess);
+                callbackinterface.foundGuess(currentIndex, guess);
               }
             } catch (Exception ex) {
               //System.out.println("Error during decrypting");
             }
           }
-          System.out.println("last checkpoint!");
+          System.out.println("Last checkpoint!");
           callbackinterface.checkpoint(currentIndex);
           long end = System.nanoTime();
           long elapsedTime = end - start;
@@ -80,7 +77,7 @@ public class SlaveBH implements Slave{
         finally {
           System.out.println("in the end!!!");
           checkpointScheduler.shutdown();
-          checkpointScheduler = Executors.newScheduledThreadPool(1);
+          //checkpointScheduler = Executors.newScheduledThreadPool(1);
         }
       }
     });
@@ -91,20 +88,21 @@ public class SlaveBH implements Slave{
 
   }
 
-  public void addCheckpointScheduler(SlaveManager callbackinterface) {
-    checkpointScheduler = Executors.newScheduledThreadPool(1);
+  public ScheduledExecutorService addCheckpointScheduler(SlaveManager callbackinterface, long currentIndex) {
+    ScheduledExecutorService checkpointScheduler = Executors.newScheduledThreadPool(1);
     Runnable automaticCheckpoint = new Runnable() {
-
       @Override
       public void run() {
         try {
           callbackinterface.checkpoint(currentIndex);
+          System.out.println("It was possible send a checkpoint to the Master");
         } catch (RemoteException ex) {
           System.out.println("It wasn't possible send a checkpoint to the Master");
         }
       }
     };
-    final ScheduledFuture<?> beeperHandle = checkpointScheduler.scheduleAtFixedRate(automaticCheckpoint, 10, 10, SECONDS);
+    checkpointScheduler.scheduleAtFixedRate(automaticCheckpoint, 0, 5, SECONDS);
+    return checkpointScheduler;
   }
 
   /*
@@ -114,7 +112,7 @@ public class SlaveBH implements Slave{
   * Always trying to addSlave on Master every 30 seconds, but if it fails
   * looks up on the name service for the Master again
   */
-  public void reRegistrationHook() {
+  public void reRegistrationHook(String host) {
     final ScheduledFuture<?> automaticRegistrationHandle = registrationScheduler.scheduleAtFixedRate(
     new Runnable() {
       boolean lookUp = false;
@@ -123,9 +121,9 @@ public class SlaveBH implements Slave{
         try {
           if(lookUp) {
             Registry registry = LocateRegistry.getRegistry(host);
-            master = (SlaveManager) registry.lookup("mestre");
+            slaveManager = (SlaveManager) registry.lookup("mestre");
           }
-          id = master.addSlave(remoteReference, slaveName);
+          id = slaveManager.addSlave(remoteReference, slaveName);
         } catch (Exception ex) {
           System.out.println("It wasn't possible to find \"mestre\" on Name Service.");
           lookUp = true;
@@ -140,17 +138,17 @@ public class SlaveBH implements Slave{
   * Initialize a Thread which remove the Slave on Master
   */
   public void attachShutDownHook() {
-    // Runtime.getRuntime().addShutdownHook(new Thread() {
-    //   @Override
-    //   public void run() {
-    //     try {
-    //       master.removeSlave(id);
-    //       System.out.println("Removing Slave " + slaveName + "...");
-    //     } catch (RemoteException ex) {
-    //
-    //     }
-    //   }
-    // });
+     Runtime.getRuntime().addShutdownHook(new Thread() {
+       @Override
+        public void run() {
+         try {
+           slaveManager.removeSlave(id);
+           System.out.println("Removing Slave " + slaveName + "...");
+         } catch (RemoteException ex) {
+
+         }
+       }
+     });
   }
 
   public static void main(String[] args) {
@@ -166,14 +164,13 @@ public class SlaveBH implements Slave{
     SlaveBH slave = new SlaveBH();
     slave.slaveName = args[1];
     slave.dictionarySlice = Util.loadDictionary();
-    slave.host = host;
     try {
       slave.remoteReference = (Slave) UnicastRemoteObject.exportObject(slave, 0);
       // Looking up for the very first time on Name service the Master
       Registry registry = LocateRegistry.getRegistry(host);
-      slave.master = (SlaveManager) registry.lookup("mestre");
+      slave.slaveManager = (SlaveManager) registry.lookup("mestre");
       // Garantee the Slave stays registered on Master
-      slave.reRegistrationHook();
+      slave.reRegistrationHook(host);
       // Garantee the Slave deregister when it's finished
       slave.attachShutDownHook();
     } catch (RemoteException | NotBoundException e) {
