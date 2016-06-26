@@ -132,10 +132,9 @@ class MasterBH implements Master{
     if(attack != null){
       attack.setCurrentWordIndex(currentindex);
       attack.setLastCall(System.currentTimeMillis());
-      // System.out.println("Checkpoint received:");
-      // System.out.println("Slave name: " + slaveNameMap.get(attack.getKey()));
-      // System.out.println("Index: " + currentindex);
-      System.out.println(attack);
+      System.out.println("Checkpoint received:");
+      System.out.println("Slave name: " + slaveNameMap.get(attack.getKey()));
+      System.out.println("Index: " + currentindex);
       if (allFinished()) {
         this.notify();
       }

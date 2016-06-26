@@ -63,7 +63,10 @@ public class SlaveBH implements Slave{
               //System.out.println("Error during decrypting");
             }
           }
+<<<<<<< HEAD
           System.out.println("Last checkpoint!");
+=======
+>>>>>>> 26c9935261e4b751677ef63268ba10c9e660d8d8
           callbackinterface.checkpoint(currentIndex);
           long end = System.nanoTime();
           long elapsedTime = end - start;
@@ -75,7 +78,6 @@ public class SlaveBH implements Slave{
           e.printStackTrace();
         }
         finally {
-          System.out.println("in the end!!!");
           checkpointScheduler.shutdown();
           //checkpointScheduler = Executors.newScheduledThreadPool(1);
         }
