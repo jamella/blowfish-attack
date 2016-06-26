@@ -25,28 +25,31 @@ public class SlaveBH implements Slave{
   private SlaveManager slaveManager;
   private Slave remoteReference;
   private String slaveName;
+  private List<Integer> currentIndex;
   private final ScheduledExecutorService registrationScheduler;
 
   public SlaveBH() {
     dictionarySlice = new ArrayList<>();
+    currentIndex = new ArrayList<>();
     registrationScheduler = Executors.newScheduledThreadPool(1);
   }
 
   @Override
   public void startSubAttack(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws RemoteException {
     SlaveBH self = this;
+    currentIndex.add((int)initialwordindex);
     Thread thread = new Thread(new Runnable(){
       @Override
       public void run(){
+        int sizeAux = currentIndex.size()-1;
         ScheduledExecutorService checkpointScheduler = Executors.newScheduledThreadPool(1);
         try {
-          long currentIndex = initialwordindex;
-          checkpointScheduler = addCheckpointScheduler(callbackinterface, currentIndex);
+          checkpointScheduler = addCheckpointScheduler(callbackinterface, sizeAux);
           System.out.println("Beginning the Attack: " + initialwordindex);
           long start = System.nanoTime();
           for (long index = initialwordindex; index <= finalwordindex; index++) {
             try {
-              currentIndex = index;
+              currentIndex.set(sizeAux, (int) index);
               String key = self.dictionarySlice.get((int) index);
               SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "Blowfish");
               Cipher cipher = Cipher.getInstance("Blowfish");
@@ -57,17 +60,14 @@ public class SlaveBH implements Slave{
                 Guess guess = new Guess();
                 guess.setKey(key);
                 guess.setMessage(decrypted);
-                callbackinterface.foundGuess(currentIndex, guess);
+                callbackinterface.foundGuess(currentIndex.get(sizeAux), guess);
               }
             } catch (Exception ex) {
               //System.out.println("Error during decrypting");
             }
           }
-<<<<<<< HEAD
           System.out.println("Last checkpoint!");
-=======
->>>>>>> 26c9935261e4b751677ef63268ba10c9e660d8d8
-          callbackinterface.checkpoint(currentIndex);
+          callbackinterface.checkpoint(currentIndex.get(sizeAux));
           long end = System.nanoTime();
           long elapsedTime = end - start;
           double seconds = (double) elapsedTime / 1000000000.0;
@@ -79,7 +79,6 @@ public class SlaveBH implements Slave{
         }
         finally {
           checkpointScheduler.shutdown();
-          //checkpointScheduler = Executors.newScheduledThreadPool(1);
         }
       }
     });
@@ -90,20 +89,19 @@ public class SlaveBH implements Slave{
 
   }
 
-  public ScheduledExecutorService addCheckpointScheduler(SlaveManager callbackinterface, long currentIndex) {
+  public ScheduledExecutorService addCheckpointScheduler(SlaveManager callbackinterface, int size) {
     ScheduledExecutorService checkpointScheduler = Executors.newScheduledThreadPool(1);
     Runnable automaticCheckpoint = new Runnable() {
       @Override
       public void run() {
         try {
-          callbackinterface.checkpoint(currentIndex);
-          System.out.println("It was possible send a checkpoint to the Master");
+          callbackinterface.checkpoint(currentIndex.get(size));
         } catch (RemoteException ex) {
           System.out.println("It wasn't possible send a checkpoint to the Master");
         }
       }
     };
-    checkpointScheduler.scheduleAtFixedRate(automaticCheckpoint, 0, 5, SECONDS);
+    checkpointScheduler.scheduleAtFixedRate(automaticCheckpoint, 10, 10, SECONDS);
     return checkpointScheduler;
   }
 
