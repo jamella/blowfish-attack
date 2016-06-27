@@ -138,17 +138,17 @@ public class SlaveBH implements Slave{
   * Initialize a Thread which remove the Slave on Master
   */
   public void attachShutDownHook() {
-     Runtime.getRuntime().addShutdownHook(new Thread() {
-       @Override
-        public void run() {
-         try {
-           slaveManager.removeSlave(id);
-           System.out.println("Removing Slave " + slaveName + "...");
-         } catch (RemoteException ex) {
-
-         }
-       }
-     });
+    //  Runtime.getRuntime().addShutdownHook(new Thread() {
+    //    @Override
+    //     public void run() {
+    //      try {
+    //        slaveManager.removeSlave(id);
+    //        System.out.println("Removing Slave " + slaveName + "...");
+    //      } catch (RemoteException ex) {
+     //
+    //      }
+    //    }
+    //  });
   }
 
   public static void main(String[] args) {
