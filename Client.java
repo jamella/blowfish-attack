@@ -20,8 +20,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class Client {
 
-private static final int SLAVES = 5;
-private static final int AVERAGE = 1;
+private static final int SLAVES = 2;
+private static final int AVERAGE = 3;
 private static final int FINALSIZE = 100000;
 
 private final String host;
