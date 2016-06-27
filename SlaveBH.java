@@ -18,7 +18,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import br.inf.ufes.pp2016_01.*;
 
-public class SlaveBH implements Slave{
+public class SlaveBH implements Slave, SlaveOverhead {
 
   private int id;
   private List<String> dictionarySlice;
@@ -84,7 +84,8 @@ public class SlaveBH implements Slave{
     });
     thread.start();
   }
-
+  
+  @Override
   public void startSubAttackOverhead(byte[] ciphertext, byte[] knowntext, long initialwordindex, long finalwordindex, SlaveManager callbackinterface) throws java.rmi.RemoteException {
 
   }
@@ -159,7 +160,7 @@ public class SlaveBH implements Slave{
       System.exit(0);
     }
 
-    //Util.getRidOfPrint();
+    Util.getRidOfPrint();
 
     SlaveBH slave = new SlaveBH();
     slave.slaveName = args[1];

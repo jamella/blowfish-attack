@@ -17,25 +17,33 @@ class SlaveAttack{
   private long lastCall;
   private long timeInit;
 
+  private boolean overhead;
 
-  public SlaveAttack(ConcurrentMap.Entry<Integer, Slave> entry,long i, long f, MasterBH m){
+
+  public SlaveAttack(ConcurrentMap.Entry<Integer, Slave> entry,long i, long f, MasterBH m, boolean o){
     slave = entry.getValue();
     key = entry.getKey();
     initialWordIndex = i;
     finalWordIndex = f;
     currentWordIndex = i;
     master = m;
+    overhead = o;
   }
 
   public void startSubAttack()throws RemoteException{
     timeInit = System.currentTimeMillis();
     lastCall = timeInit;
     try {
-      slave.startSubAttack(master.cipherText,master.knownText,initialWordIndex,finalWordIndex,(SlaveManager)master.callbackInterface);
+      if(overhead) {
+        SlaveOverhead s = (SlaveOverhead) slave;
+        s.startSubAttackOverhead(master.cipherText,master.knownText,initialWordIndex,finalWordIndex,(SlaveManager)master.callbackInterface);
+      } else {
+        slave.startSubAttack(master.cipherText,master.knownText,initialWordIndex,finalWordIndex,(SlaveManager)master.callbackInterface);
+      }
     }
     catch (RemoteException e) {
       master.removeSlave(key);
-      master.spreadAttack(currentWordIndex,finalWordIndex);
+      master.spreadAttack(currentWordIndex,finalWordIndex, false);
     }
   }
 
